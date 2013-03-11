@@ -78,10 +78,10 @@ namespace Merge.Test
         [Test]
         public void should_find_all_new_lines()
         {
-            var original = StringGenerator.GenerateStrings(count: 10, enableWhitespaces: true);
+            var original = StringGenerator.GenerateStrings(count: 10, enableWhitespaces: false);
             var target = original.ToList();
-            target.InsertRange(3, StringGenerator.GenerateStrings(count: 3, enableWhitespaces: true));
-            target.InsertRange(9, StringGenerator.GenerateStrings(count: 2, enableWhitespaces: true));
+            target.InsertRange(3, StringGenerator.GenerateStrings(count: 3, enableWhitespaces: false));
+            target.InsertRange(9, StringGenerator.GenerateStrings(count: 2, enableWhitespaces: false));
 
             var diff = new Diff();
 

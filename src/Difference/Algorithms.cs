@@ -13,7 +13,7 @@ namespace Merge
 
             public LCSMatrix(int sequence1Length, int sequence2Length)
             {
-                _data = new int[sequence1Length, sequence2Length];
+                _data = new int[sequence1Length + 1, sequence2Length + 1];
             }
 
             public int MaxLength { get; private set; }
