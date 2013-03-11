@@ -26,9 +26,32 @@ namespace Merge
                 return originalLines.Select(x => Difference.Delete(x, null)).ToArray();
             }
 
+            var lcsMatrix = Algorithms.LargestCommonLengthMatrix(originalLines, targetLines);
+            return GetDifferences(lcsMatrix, originalLines, targetLines, originalLines.Length - 1, targetLines.Length - 1).ToArray();
+
             var originalRange = new LinesRange(originalLines, 0, originalLines.Length - 1);
             var targetRange   = new LinesRange(targetLines, 0, targetLines.Length - 1);
             return RangeDifference(originalRange, targetRange).ToArray();
+        }
+
+        private IEnumerable<Difference> GetDifferences(Algorithms.LCSMatrix<Line> lcsMatrix, Line[] originalLines, Line[] targetLines, int iOriginal, int iTarget)
+        {
+            if (iOriginal > 0 && iTarget > 0 && originalLines[iOriginal].Equals(targetLines[iTarget]))
+            {
+                var differences = GetDifferences(lcsMatrix, originalLines, targetLines, iOriginal - 1, iTarget - 1);
+                return differences.Concat(Difference.Equal(originalLines[iOriginal], targetLines[iTarget]).ToEnumerable());
+            }
+            if (iTarget > 0 && (iOriginal == 0 || lcsMatrix[iOriginal, iTarget-1] >= lcsMatrix[iOriginal-1, iTarget]))
+            {
+                var differences = GetDifferences(lcsMatrix, originalLines, targetLines, iOriginal, iTarget - 1);
+                return differences.Concat(Difference.Added(null, targetLines[iTarget]).ToEnumerable());
+            }
+            if (iOriginal > 0 && (iTarget == 0 || lcsMatrix[iOriginal, iTarget - 1] < lcsMatrix[iOriginal - 1, iTarget]))
+            {
+                var differences = GetDifferences(lcsMatrix, originalLines, targetLines, iOriginal-1, iTarget);
+                return differences.Concat(Difference.Delete(originalLines[iOriginal], null).ToEnumerable());
+            }
+            return Enumerable.Empty<Difference>();
         }
 
         private IEnumerable<Difference> RangeDifference(LinesRange original, LinesRange target)

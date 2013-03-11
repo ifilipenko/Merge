@@ -5,7 +5,7 @@ using BuildingBlocks.Common;
 
 namespace Merge
 {
-    public class Algorithms
+    public static class Algorithms
     {
         public class LCSMatrix<T>
         {
@@ -54,12 +54,18 @@ namespace Merge
         /// <typeparam name="T"></typeparam>
         /// <param name="sequence1"></param>
         /// <param name="sequence2"></param>
+        /// <param name="equalityComparer"></param>
         /// <returns></returns>
-        public LCSMatrix<T> LargestCommonLengthMatrix<T>(T[] sequence1, T[] sequence2)
+        public static LCSMatrix<T> LargestCommonLengthMatrix<T>(T[] sequence1, T[] sequence2, IEqualityComparer<T> equalityComparer = null)
         {
             var matrix = new LCSMatrix<T>(sequence1.Length, sequence2.Length);
             if (matrix.IsEmpty)
                 return matrix;
+
+            if (equalityComparer == null)
+            {
+                equalityComparer = new DefaultEqualityComparer<T>();
+            }
 
             for (int i = 0; i <= sequence1.Length; i++)
             {
@@ -69,7 +75,7 @@ namespace Merge
                     {
                         matrix[i, j] = 0;
                     }
-                    else if (Equals(sequence1[i - 1], sequence2[j - 1]))
+                    else if (equalityComparer.Equals(sequence1[i - 1], sequence2[j - 1]))
                     {
                         matrix[i, j] = matrix[i - 1, j - 1] + 1;
                     }
@@ -90,27 +96,28 @@ namespace Merge
         /// <typeparam name="T"></typeparam>
         /// <param name="sequence1"></param>
         /// <param name="sequence2"></param>
+        /// <param name="equalityComparer"></param>
         /// <returns></returns>
-        public T[] LargestCommonSubsequence<T>(T[] sequence1, T[] sequence2)
+        public static T[] LargestCommonSubsequence<T>(T[] sequence1, T[] sequence2, IEqualityComparer<T> equalityComparer = null)
         {
             var matrix = LargestCommonLengthMatrix(sequence1, sequence2);
-            return LargestCommonSubsequenceCore(matrix, sequence1.Length, sequence2.Length, sequence1, sequence2).ToArray();
+            return LargestCommonSubsequenceCore(matrix, sequence1.Length, sequence2.Length, sequence1, sequence2, equalityComparer).ToArray();
         }
 
-        private IEnumerable<T> LargestCommonSubsequenceCore<T>(LCSMatrix<T> matrix, int i, int j, T[] sequence1, T[] sequence2)
+        private static IEnumerable<T> LargestCommonSubsequenceCore<T>(LCSMatrix<T> matrix, int i, int j, T[] sequence1, T[] sequence2, IEqualityComparer<T> equalityComparer)
         {
             if (i == 0 || j == 0)
                 return Enumerable.Empty<T>();
 
-            if (Equals(sequence1[i - 1], sequence2[j - 1]))
+            if (equalityComparer.Equals(sequence1[i - 1], sequence2[j - 1]))
             {
-                var subsequence = LargestCommonSubsequenceCore(matrix, i - 1, j - 1, sequence1, sequence2);
+                var subsequence = LargestCommonSubsequenceCore(matrix, i - 1, j - 1, sequence1, sequence2, equalityComparer);
                 return subsequence.Concat(sequence1[i - 1].ToEnumerable());
             }
 
             return matrix[i - 1, j] > matrix[i, j - 1]
-                       ? LargestCommonSubsequenceCore(matrix, i - 1, j, sequence1, sequence2)
-                       : LargestCommonSubsequenceCore(matrix, i, j - 1, sequence1, sequence2);
+                       ? LargestCommonSubsequenceCore(matrix, i - 1, j, sequence1, sequence2, equalityComparer)
+                       : LargestCommonSubsequenceCore(matrix, i, j - 1, sequence1, sequence2, equalityComparer);
         }
     }
 }
