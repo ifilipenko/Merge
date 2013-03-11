@@ -46,6 +46,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Algorithms.cs" />
     <Compile Include="Diff.cs" />
     <Compile Include="DifferenceType.cs" />
     <Compile Include="Difference.cs" />
