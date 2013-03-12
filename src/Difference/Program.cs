@@ -5,36 +5,6 @@ using System.Linq;
 
 namespace Merge
 {
-    class Parameters
-    {
-        public string FilePath1 { get; set; }
-        public string FilePath2 { get; set; }
-
-        public bool Print { get; set; }
-
-        public bool Merge { get; set; }
-
-        public bool DiffOnly { get; set; }
-
-        public bool IsInitalized
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public void SetFiles(string[] files)
-        {
-            throw new NotImplementedException();
-        }
-    }
-
-    class Merge
-    {
-        public string MergeDifferences(Difference[] differences)
-        {
-            throw new NotImplementedException();
-        }
-    }
-
     class Program
     {
         static void Main(string[] args)
@@ -42,7 +12,7 @@ namespace Merge
             try
             {
                 var parameters = ProcessArguments(args);
-                if (!parameters.IsInitalized)
+                if (!parameters.IsInitialized)
                 {
                     return;
                 }
@@ -51,10 +21,7 @@ namespace Merge
                 var file2Lines  = File.ReadAllLines(parameters.FilePath2);
                 var differences = Diff.GetLinesDifference(file1Lines, file2Lines);
 
-                if (parameters.Print)
-                {
-                    Print(differences);
-                }
+                Print(differences);
                 if (parameters.Merge)
                 {
                     var merge = new Merge();
@@ -62,15 +29,18 @@ namespace Merge
                     Console.Write(mergedFileText);
                 }
             }
-            catch (ApplicationException ex)
+            catch (Exception ex)
             {
                 PrintException(ex);
             }
         }
 
-        private static void Print(Difference[] differences)
+        private static void Print(IEnumerable<Difference> differences)
         {
-            throw new NotImplementedException();
+            foreach (var difference in differences)
+            {
+                Console.WriteLine(difference);
+            }
         }
 
         private static Parameters ProcessArguments(string[] args)
@@ -91,7 +61,7 @@ namespace Merge
                     if (args.Length < 4)
                         throw new ArgumentException("For merge requires 3 parameters to specify the files");
                     parameters.Merge = true;
-                    parameters.SetFiles(args.Skip(1).Take(2).ToArray());
+                    parameters.SetFiles(args.Skip(1).Take(3).ToArray());
                     break;
                 case "?":
                 case "-h":
@@ -105,12 +75,23 @@ namespace Merge
 
         private static void PrintHelp()
         {
-            throw new NotImplementedException();
+            Console.WriteLine("-diff  \t \"changed file path\" \"original file path\" \t\t\t get two files difference");
+            Console.WriteLine("-merge \t \"file1 path\"        \"file2 path\"         \"original file path\" \t merge changes of two file");
         }
 
         private static void PrintException(Exception exception)
         {
-            throw new NotImplementedException();
+            try
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine(exception);
+            }
+            finally
+            {
+                Console.ResetColor();
+            }
+
+            Console.WriteLine("Use parameter key -h, -help or ? for help.");
         }
     }
 }

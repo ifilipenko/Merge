@@ -52,6 +52,8 @@
     <Compile Include="DifferenceType.cs" />
     <Compile Include="Difference.cs" />
     <Compile Include="Line.cs" />
+    <Compile Include="Merge.cs" />
+    <Compile Include="Parameters.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
