@@ -66,13 +66,13 @@ namespace Merge
                                 continue;
                             case DifferenceType.Added:
                                 var newMergedLine = MergedLine.NewLine(lineDifference.LineEntry, ++iLine);
+                                yield return newMergedLine;
                                 iLine++;
                                 if (!mergedLineReturned)
                                 {
                                     mergedLineReturned = true;
                                     yield return mergedLine;
                                 }
-                                yield return newMergedLine;
                                 break;
                         }
                     }

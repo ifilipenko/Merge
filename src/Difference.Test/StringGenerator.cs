@@ -13,14 +13,28 @@ namespace Merge.Test
             _random = new Random((int)DateTime.Now.Ticks);
         }
 
-        public static string[] GenerateStrings(int count, bool enableWhitespaces)
+        public static string[] Range(string prefix, int count)
         {
-            return Enumerable.Range(0, count)
-                             .Select(_ => GenerateString(enableWhitespaces: enableWhitespaces))
+            return Enumerable.Range(1, count)
+                             .Select(x => prefix + x)
                              .ToArray();
         }
 
-        public static string GenerateString(int minLen = 1, int maxLen = 50, bool enableWhitespaces = false)
+        public static string[] Range(string prefix, int from, int count)
+        {
+            return Enumerable.Range(from, count)
+                             .Select(x => prefix + x)
+                             .ToArray();
+        }
+
+        public static string[] RandomStrings(int count, bool enableWhitespaces)
+        {
+            return Enumerable.Range(0, count)
+                             .Select(_ => RandomString(enableWhitespaces: enableWhitespaces))
+                             .ToArray();
+        }
+
+        public static string RandomString(int minLen = 1, int maxLen = 50, bool enableWhitespaces = false)
         {
             const byte min = (byte) 'a';
             const byte max = (byte) 'z';

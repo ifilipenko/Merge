@@ -25,16 +25,16 @@ namespace Merge.Test
         [Test]
         public void should_merge_not_crossed_changes()
         {
-            var original = StringGenerator.GenerateStrings(count: 10, enableWhitespaces: true);
+            var original = StringGenerator.Range(from: 1, count: 10, prefix: "line ");
             var target1 = original.ToList();
             var target2 = original.ToList();
 
-            target1[3] = StringGenerator.GenerateString(enableWhitespaces: true);
-            target1[4] = StringGenerator.GenerateString(enableWhitespaces: true);
-            target1.InsertRange(5, StringGenerator.GenerateStrings(1, enableWhitespaces: true));
+            target1[3] = "replaced line 3";
+            target1[4] = "replaced line 4";
+            target1.Insert(5, "inserted line 5");
 
-            target2[6] = StringGenerator.GenerateString(enableWhitespaces: true);
-            target2[7] = StringGenerator.GenerateString(enableWhitespaces: true);
+            target2[6] = "replaced line 6";
+            target2[7] = "replaced line 7";
             target2.RemoveRange(8, 1);
 
             var expected = original.ToList();
