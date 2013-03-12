@@ -116,30 +116,65 @@ namespace Merge
                                                        Func<T, TResult> processDeleted)
         {
             var matrix = CreateMatrix();
-            return BacktrackCore(matrix, _sequence1.Length, _sequence2.Length, processEquals, processAdded, processDeleted).ToArray();
+            return BacktrackCore(matrix, _sequence1.Length, _sequence2.Length,
+                                 (line1, line2, results) => results.Concat(processEquals(line1, line2).ToEnumerableOrEmpty()),
+                                 (line, results) => results.Concat(processAdded(line).ToEnumerableOrEmpty()),
+                                 (line, results) => results.Concat(processDeleted(line).ToEnumerableOrEmpty()),
+                                 Enumerable.Empty<TResult>())
+                .ToArray();
         }
 
-        private IEnumerable<TResult> BacktrackCore<TResult>(Matrix matrix, int i, int j,
-                                                            Func<T, T, TResult> processEquals,
-                                                            Func<T, TResult> processAdded,
-                                                            Func<T, TResult> processDeleted)
+        /// <summary>
+        /// Implementation algorithm described in 
+        /// http://en.wikipedia.org/wiki/Longest_common_subsequence_problem
+        /// </summary>
+        /// <param name="processEquals">processing function identical items from both sequences</param>
+        /// <param name="processAdded">processing function added items to sequence2</param>
+        /// <param name="processDeleted">processing function deleted items from sequence1</param>
+        public void Backtrack(Action<T, T> processEquals, Action<T> processAdded, Action<T> processDeleted)
         {
-            if (i > 0 && j > 0 && _equalityComparer.Equals(_sequence1[i-1], _sequence2[j-1]))
+            var matrix = CreateMatrix();
+            BacktrackCore<object>(matrix, _sequence1.Length, _sequence2.Length,
+                                  (line1, line2, results) =>
+                                      {
+                                          processEquals(line1, line2);
+                                          return null;
+                                      },
+                                  (line, results) =>
+                                      {
+                                          processAdded(line);
+                                          return null;
+                                      },
+                                  (line, results) =>
+                                      {
+                                          processDeleted(line);
+                                          return null;
+                                      },
+                                  null);
+        }
+
+        private TResult BacktrackCore<TResult>(Matrix matrix, int i, int j,
+                                               Func<T, T, TResult, TResult> processEquals,
+                                               Func<T, TResult, TResult> processAdded,
+                                               Func<T, TResult, TResult> processDeleted,
+                                               TResult emptyResult)
+        {
+            if (i > 0 && j > 0 && _equalityComparer.Equals(_sequence1[i - 1], _sequence2[j - 1]))
             {
-                var result = BacktrackCore(matrix, i - 1, j - 1, processEquals, processAdded, processDeleted);
-                return result.Concat(processEquals(_sequence1[i - 1], _sequence2[j - 1]).ToEnumerable());
+                var result = BacktrackCore(matrix, i - 1, j - 1, processEquals, processAdded, processDeleted, emptyResult);
+                return processEquals(_sequence1[i - 1], _sequence2[j - 1], result);
             }
             if (j > 0 && (i == 0 || matrix[i, j - 1] >= matrix[i - 1, j]))
             {
-                var result = BacktrackCore(matrix, i, j - 1, processEquals, processAdded, processDeleted);
-                return result.Concat(processAdded(_sequence2[j - 1]).ToEnumerable());
+                var result = BacktrackCore(matrix, i, j - 1, processEquals, processAdded, processDeleted, emptyResult);
+                return processAdded(_sequence2[j - 1], result);
             }
             if (i > 0 && (j == 0 || matrix[i, j - 1] < matrix[i - 1, j]))
             {
-                var result = BacktrackCore(matrix, i - 1, j, processEquals, processAdded, processDeleted);
-                return result.Concat(processDeleted(_sequence1[i - 1]).ToEnumerable());
+                var result = BacktrackCore(matrix, i - 1, j, processEquals, processAdded, processDeleted, emptyResult);
+                return processDeleted(_sequence1[i - 1], result);
             }
-            return Enumerable.Empty<TResult>();
+            return emptyResult;
         }
 
         private IEnumerable<T> GetSubsequenceCore(Matrix matrix, int i, int j)

@@ -42,6 +42,8 @@ namespace Merge
             var difference1 = Diff.GetLinesDifference(originalLines, file1Lines);
             var difference2 = Diff.GetLinesDifference(originalLines, file2Lines);
 
+            //var mergedDifference = MergeDiff(difference1, difference2)
+
             var mergedLines = MergeFirst(originalLines, difference1);
             mergedLines = MergeSecond(mergedLines, difference2);
 
