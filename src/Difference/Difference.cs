@@ -37,9 +37,23 @@ namespace Merge
 
         public override string ToString()
         {
-            var sourceIndex = Line1 == null ? string.Empty : "source: " + Line1.Index;
-            var targetIndex = Line2 == null ? string.Empty : "target: " + Line2.Index;
-            return sourceIndex + ", " + targetIndex + " [" + DifferenceString() + "]";
+            var prefix = string.Empty;
+            if (Line1 != null)
+            {
+                prefix += Line1.Index;
+            }
+            if (Line2 != null)
+            {
+                if (Line1 != null)
+                {
+                    prefix += "->" +  Line2.Index;
+                }
+                else
+                {
+                    prefix += Line2.Index;
+                }
+            }
+            return string.IsNullOrEmpty(prefix) ? DifferenceString() : prefix + "\t\t" + DifferenceString();
         }
 
         private string DifferenceString()
