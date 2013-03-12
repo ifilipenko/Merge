@@ -9,7 +9,7 @@ namespace Merge.Test
     public class DiffTests
     {
         [Test]
-        public void Should_file_when_original_is_null()
+        public void Should_fail_when_original_is_null()
         {
             Action action = () => Diff.GetLinesDifference(null, new string[0]);
 
