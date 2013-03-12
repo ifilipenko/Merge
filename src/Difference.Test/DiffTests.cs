@@ -105,7 +105,6 @@ namespace Merge.Test
             target.RemoveRange(3, 3);
 
             var diff = new Diff();
-
             var linesDifference = diff.GetLinesDifference(original, target.ToArray());
 
             linesDifference.Should().HaveCount(original.Length);
@@ -115,6 +114,35 @@ namespace Merge.Test
             linesDifference[6].Type.Should().Be(DifferenceType.Deleted);
             linesDifference[7].Type.Should().Be(DifferenceType.Deleted);
             linesDifference.Where(x => x.Type == DifferenceType.Equals).Should().HaveSameCount(target);
+        }
+
+        [Test]
+        public void should_find_all_replaced_lines()
+        {
+            var original = StringGenerator.GenerateStrings(count: 10, enableWhitespaces: true);
+            var target = original.ToList();
+
+            target[3] = StringGenerator.GenerateString(enableWhitespaces: true);
+            target[4] = StringGenerator.GenerateString(enableWhitespaces: true);
+            
+
+            target[6] = StringGenerator.GenerateString(enableWhitespaces: true);
+            target[7] = StringGenerator.GenerateString(enableWhitespaces: true);
+
+            var diff = new Diff();
+            var linesDifference = diff.GetLinesDifference(original, target.ToArray());
+
+            linesDifference.Should().HaveCount(original.Length + 4);
+            linesDifference[3].Type.Should().Be(DifferenceType.Deleted);
+            linesDifference[4].Type.Should().Be(DifferenceType.Deleted);
+            linesDifference[5].Type.Should().Be(DifferenceType.Added);
+            linesDifference[6].Type.Should().Be(DifferenceType.Added);
+
+            linesDifference[8].Type.Should().Be(DifferenceType.Deleted);
+            linesDifference[9].Type.Should().Be(DifferenceType.Deleted);
+            linesDifference[10].Type.Should().Be(DifferenceType.Added);
+            linesDifference[11].Type.Should().Be(DifferenceType.Added);
+            linesDifference.Where(x => x.Type == DifferenceType.Equals).Should().HaveCount(6);
         }
     }
 }
