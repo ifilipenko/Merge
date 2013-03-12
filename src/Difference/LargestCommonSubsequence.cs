@@ -71,7 +71,7 @@ namespace Merge
 
             for (int i = 0; i <= _sequence1.Length; i++)
             {
-                for (int j = 0; j <= _sequence1.Length; j++)
+                for (int j = 0; j <= _sequence2.Length; j++)
                 {
                     if (j == 0 || i == 0)
                     {
