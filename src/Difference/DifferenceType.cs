@@ -4,7 +4,6 @@
     {
         Equals,
         Deleted,
-        Added,
-        Changed
+        Added
     }
 }
