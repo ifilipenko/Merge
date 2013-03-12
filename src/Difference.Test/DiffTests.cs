@@ -17,7 +17,7 @@ namespace Merge.Test
         }
 
         [Test]
-        public void Should_file_when_target_is_null()
+        public void Should_fail_when_target_is_null()
         {
             Action action = () => Diff.GetLinesDifference(new string[0], null);
 
