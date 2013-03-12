@@ -107,9 +107,9 @@ namespace Merge
         /// http://en.wikipedia.org/wiki/Longest_common_subsequence_problem
         /// </summary>
         /// <typeparam name="TResult">Processing result</typeparam>
-        /// <param name="processEquals">How process both sequences elements equality</param>
-        /// <param name="processAdded">How process new elements from sequence2</param>
-        /// <param name="processDeleted">How process remove elements from sequence1</param>
+        /// <param name="processEquals">processing function identical items from both sequences</param>
+        /// <param name="processAdded">processing function added items to sequence2</param>
+        /// <param name="processDeleted">processing function deleted items from sequence1</param>
         /// <returns></returns>
         public IEnumerable<TResult> Backtrack<TResult>(Func<T, T, TResult> processEquals,
                                                        Func<T, TResult> processAdded,
