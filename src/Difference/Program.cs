@@ -13,20 +13,21 @@ namespace Merge
             {
                 var parameters = ProcessArguments(args);
                 if (!parameters.IsInitialized)
-                {
                     return;
-                }
 
                 var file1Lines  = File.ReadAllLines(parameters.FilePath1);
                 var file2Lines  = File.ReadAllLines(parameters.FilePath2);
                 var differences = Diff.GetLinesDifference(file1Lines, file2Lines);
 
-                Print(differences);
                 if (parameters.Merge)
                 {
                     var merge = new Merge();
                     var mergedFileText = merge.MergeDifferences(differences);
                     Console.Write(mergedFileText);
+                }
+                else
+                {
+                    Print(differences);
                 }
             }
             catch (Exception ex)
