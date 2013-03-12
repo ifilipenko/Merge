@@ -4,14 +4,14 @@ namespace Merge
 {
     public class Difference
     {
-        public static Difference Delete(Line text1, Line text2)
+        public static Difference Delete(Line line)
         {
-            return new Difference(text1, text2, DifferenceType.Deleted);
+            return new Difference(line, null, DifferenceType.Deleted);
         }
 
-        public static Difference Added(Line text1, Line text2)
+        public static Difference Added(Line line)
         {
-            return new Difference(text1, text2, DifferenceType.Added);
+            return new Difference(null, line, DifferenceType.Added);
         }
 
         public static Difference Equal(Line text1, Line text2)
