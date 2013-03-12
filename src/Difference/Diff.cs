@@ -3,9 +3,9 @@ using System.Linq;
 
 namespace Merge
 {
-    public class Diff
+    public static class Diff
     {
-        public Difference[] GetLinesDifference(string[] original, string[] target)
+        public static Difference[] GetLinesDifference(string[] original, string[] target)
         {
             if (original == null)
                 throw new ArgumentNullException("original");

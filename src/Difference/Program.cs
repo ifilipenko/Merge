@@ -29,10 +29,9 @@ namespace Merge
             {
                 var parameters = ProcessArguments(args);
 
-                var diff = new Diff();
-                var file1Lines = File.ReadAllLines(parameters.FilePath1);
-                var file2Lines = File.ReadAllLines(parameters.FilePath2);
-                var differences = diff.GetLinesDifference(file1Lines, file2Lines);
+                var file1Lines  = File.ReadAllLines(parameters.FilePath1);
+                var file2Lines  = File.ReadAllLines(parameters.FilePath2);
+                var differences = Diff.GetLinesDifference(file1Lines, file2Lines);
 
                 if (parameters.Print)
                 {

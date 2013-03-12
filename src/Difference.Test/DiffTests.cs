@@ -11,9 +11,7 @@ namespace Merge.Test
         [Test]
         public void Should_file_when_original_is_null()
         {
-            var diff = new Diff();
-
-            Action action = () => diff.GetLinesDifference(null, new string[0]);
+            Action action = () => Diff.GetLinesDifference(null, new string[0]);
 
             action.ShouldThrow<ArgumentNullException>();
         }
@@ -21,9 +19,7 @@ namespace Merge.Test
         [Test]
         public void Should_file_when_target_is_null()
         {
-            var diff = new Diff();
-
-            Action action = () => diff.GetLinesDifference(new string[0], null);
+            Action action = () => Diff.GetLinesDifference(new string[0], null);
 
             action.ShouldThrow<ArgumentNullException>();
         }
@@ -31,9 +27,7 @@ namespace Merge.Test
         [Test]
         public void should_return_empty_diff_when_two_lines_is_empty()
         {
-            var diff = new Diff();
-
-            var difference = diff.GetLinesDifference(new string[0], new string[0]);
+            var difference = Diff.GetLinesDifference(new string[0], new string[0]);
 
             difference.Should().BeEmpty();
         }
@@ -41,9 +35,7 @@ namespace Merge.Test
         [Test]
         public void should_mark_all_target_lines_as_new_when_original_is_empty()
         {
-            var diff = new Diff();
-
-            var linesDifference = diff.GetLinesDifference(new string[0], StringGenerator.GenerateStrings(count: 5, enableWhitespaces: true));
+            var linesDifference = Diff.GetLinesDifference(new string[0], StringGenerator.GenerateStrings(count: 5, enableWhitespaces: true));
 
             linesDifference.Should().HaveCount(5);
             linesDifference.Should().OnlyContain(d => d.Type == DifferenceType.Added);
@@ -55,8 +47,7 @@ namespace Merge.Test
             var original = StringGenerator.GenerateStrings(count: 5, enableWhitespaces: true);
             var target = new string[0];
 
-            var diff = new Diff();
-            var linesDifference = diff.GetLinesDifference(original, target);
+            var linesDifference = Diff.GetLinesDifference(original, target);
 
             linesDifference.Should().HaveCount(5);
             linesDifference.Should().OnlyContain(d => d.Type == DifferenceType.Deleted);
@@ -68,8 +59,7 @@ namespace Merge.Test
             var original = StringGenerator.GenerateStrings(count: 10, enableWhitespaces: true);
             var target = original.ToArray();
 
-            var diff = new Diff();
-            var linesDifference = diff.GetLinesDifference(original, target);
+            var linesDifference = Diff.GetLinesDifference(original, target);
 
             linesDifference.Should().HaveCount(10);
             linesDifference.Should().OnlyContain(d => d.Type == DifferenceType.Equals);
@@ -83,9 +73,7 @@ namespace Merge.Test
             target.InsertRange(3, StringGenerator.GenerateStrings(count: 3, enableWhitespaces: true));
             target.InsertRange(9, StringGenerator.GenerateStrings(count: 2, enableWhitespaces: true));
 
-            var diff = new Diff();
-
-            var linesDifference = diff.GetLinesDifference(original, target.ToArray());
+            var linesDifference = Diff.GetLinesDifference(original, target.ToArray());
 
             linesDifference.Should().HaveCount(target.Count);
             linesDifference[3].Type.Should().Be(DifferenceType.Added);
@@ -104,8 +92,7 @@ namespace Merge.Test
             target.RemoveRange(6, 2);
             target.RemoveRange(3, 3);
 
-            var diff = new Diff();
-            var linesDifference = diff.GetLinesDifference(original, target.ToArray());
+            var linesDifference = Diff.GetLinesDifference(original, target.ToArray());
 
             linesDifference.Should().HaveCount(original.Length);
             linesDifference[3].Type.Should().Be(DifferenceType.Deleted);
@@ -129,8 +116,7 @@ namespace Merge.Test
             target[6] = StringGenerator.GenerateString(enableWhitespaces: true);
             target[7] = StringGenerator.GenerateString(enableWhitespaces: true);
 
-            var diff = new Diff();
-            var linesDifference = diff.GetLinesDifference(original, target.ToArray());
+            var linesDifference = Diff.GetLinesDifference(original, target.ToArray());
 
             linesDifference.Should().HaveCount(original.Length + 4);
             linesDifference[3].Type.Should().Be(DifferenceType.Deleted);
