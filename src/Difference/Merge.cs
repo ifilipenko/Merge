@@ -8,5 +8,10 @@ namespace Merge
         {
             throw new NotImplementedException();
         }
+
+        public string MergeDifferences(string[] originaLines, string[] file1Lines, string[] file2Lines)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -15,18 +15,29 @@ namespace Merge
                 if (!parameters.IsInitialized)
                     return;
 
-                var file1Lines  = File.ReadAllLines(parameters.FilePath1);
-                var file2Lines  = File.ReadAllLines(parameters.FilePath2);
-                var differences = Diff.GetLinesDifference(file1Lines, file2Lines);
+                var originalLines = File.ReadAllLines(parameters.OriginalFilePath);
+                var file1Lines = File.ReadAllLines(parameters.FilePath1);
 
                 if (parameters.Merge)
                 {
+                    Console.WriteLine("Merge");
+                    Console.WriteLine("\t" + parameters.OriginalFilePath);
+                    Console.WriteLine("With files");
+                    Console.WriteLine("\t" + parameters.FilePath1);
+                    Console.WriteLine("\t" + parameters.FilePath2);
+
+                    var file2Lines = File.ReadAllLines(parameters.FilePath2);
                     var merge = new Merge();
-                    var mergedFileText = merge.MergeDifferences(differences);
+                    var mergedFileText = merge.MergeDifferences(originalLines, file1Lines, file2Lines);
                     Console.Write(mergedFileText);
                 }
                 else
                 {
+                    Console.WriteLine("Diff for:");
+                    Console.WriteLine("\t" + parameters.OriginalFilePath);
+                    Console.WriteLine("\t" + parameters.FilePath1);
+
+                    var differences = Diff.GetLinesDifference(originalLines, file1Lines);
                     Print(differences);
                 }
             }
@@ -50,6 +61,7 @@ namespace Merge
 
             if (args == null || args.Length == 0)
                 throw new ArgumentException("Arguments can not be null");
+
             switch (args[0].ToLower())
             {
                 case "-diff":
