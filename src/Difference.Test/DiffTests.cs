@@ -78,10 +78,10 @@ namespace Merge.Test
         [Test]
         public void should_find_all_new_lines()
         {
-            var original = StringGenerator.GenerateStrings(count: 10, enableWhitespaces: false);
+            var original = StringGenerator.GenerateStrings(count: 10, enableWhitespaces: true);
             var target = original.ToList();
-            target.InsertRange(3, StringGenerator.GenerateStrings(count: 3, enableWhitespaces: false));
-            target.InsertRange(9, StringGenerator.GenerateStrings(count: 2, enableWhitespaces: false));
+            target.InsertRange(3, StringGenerator.GenerateStrings(count: 3, enableWhitespaces: true));
+            target.InsertRange(9, StringGenerator.GenerateStrings(count: 2, enableWhitespaces: true));
 
             var diff = new Diff();
 
@@ -93,7 +93,28 @@ namespace Merge.Test
             linesDifference[5].Type.Should().Be(DifferenceType.Added);
             linesDifference[9].Type.Should().Be(DifferenceType.Added);
             linesDifference[10].Type.Should().Be(DifferenceType.Added);
-            linesDifference.Where(x => x.Type == DifferenceType.Equals).Should().HaveCount(10);
+            linesDifference.Where(x => x.Type == DifferenceType.Equals).Should().HaveSameCount(original);
+        }
+
+        [Test]
+        public void should_find_all_removed_lines()
+        {
+            var original = StringGenerator.GenerateStrings(count: 10, enableWhitespaces: true);
+            var target = original.ToList();
+            target.RemoveRange(6, 2);
+            target.RemoveRange(3, 3);
+
+            var diff = new Diff();
+
+            var linesDifference = diff.GetLinesDifference(original, target.ToArray());
+
+            linesDifference.Should().HaveCount(original.Length);
+            linesDifference[3].Type.Should().Be(DifferenceType.Deleted);
+            linesDifference[4].Type.Should().Be(DifferenceType.Deleted);
+            linesDifference[5].Type.Should().Be(DifferenceType.Deleted);
+            linesDifference[6].Type.Should().Be(DifferenceType.Deleted);
+            linesDifference[7].Type.Should().Be(DifferenceType.Deleted);
+            linesDifference.Where(x => x.Type == DifferenceType.Equals).Should().HaveSameCount(target);
         }
     }
 }
