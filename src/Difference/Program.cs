@@ -27,8 +27,7 @@ namespace Merge
                     Console.WriteLine("\t" + parameters.FilePath2);
 
                     var file2Lines = File.ReadAllLines(parameters.FilePath2);
-                    var merge = new Merge();
-                    var mergedFileText = merge.MergeDifferences(originalLines, file1Lines, file2Lines);
+                    var mergedFileText = Merge.Execute(originalLines, file1Lines, file2Lines);
                     Console.Write(mergedFileText);
                 }
                 else
