@@ -48,6 +48,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DiffTests.cs" />
+    <Compile Include="MergeTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StringGenerator.cs" />
   </ItemGroup>
