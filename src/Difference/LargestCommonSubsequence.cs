@@ -115,8 +115,7 @@ namespace Merge
             BacktrackCore(matrix, _sequence1.Length, _sequence2.Length, processEquals, processAdded, processDeleted);
         }
 
-        private void BacktrackCore(Matrix matrix, int i, int j, Action<T, T> processEquals, Action<T> processAdded,
-                                   Action<T> processDeleted)
+        private void BacktrackCore(Matrix matrix, int i, int j, Action<T, T> processEquals, Action<T> processAdded, Action<T> processDeleted)
         {
             if (i > 0 && j > 0 && _equalityComparer.Equals(_sequence1[i - 1], _sequence2[j - 1]))
             {
