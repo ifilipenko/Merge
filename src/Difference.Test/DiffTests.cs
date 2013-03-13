@@ -273,7 +273,7 @@ namespace Merge.Test
             target1[4] = "replaced line 4";
             target1.Insert(5, "inserted line 5");
 
-            target2[5] = "replaced line 5";
+            target2[5] = "conflicted!!!";
             target2[7] = "replaced line 7";
             target2.RemoveRange(8, 1);
 
@@ -284,6 +284,35 @@ namespace Merge.Test
 
             mergedDiff.HasConflicts.Should().BeTrue();
             mergedDiff.Ranges.Where(x => x.HasConflict).Should().HaveCount(1);
+        }
+
+        [Test]
+        public void Merge_should_cut_conflicted_part_as_separated_diff()
+        {
+            var original = StringGenerator.Range(from: 1, count: 10, prefix: "line ").ToArray();
+            var target1 = original.ToList();
+            var target2 = original.ToList();
+
+            target1[3] = "replaced line 3";
+            target1[4] = "replaced line 4";
+            target1.Insert(5, "inserted line 5");
+
+            target2[5] = "conflicted!!!";
+            target2[7] = "replaced line 7";
+            target2.RemoveRange(8, 1);
+
+            var diff1 = new Diff(original, target1.ToArray());
+            var diff2 = new Diff(original, target2.ToArray());
+
+            var mergedDiff = Diff.Merge(diff1, diff2);
+
+            mergedDiff.Ranges.Should().HaveCount(6);
+            mergedDiff.Ranges[1].Length.Should().Be(2);
+            mergedDiff.Ranges[2].HasConflict.Should().BeTrue();
+            mergedDiff.Ranges[2].DifferenceType.Should().Be(DifferenceType.Deleted);
+            mergedDiff.Ranges[2].From.Should().Be(5);
+            mergedDiff.Ranges[2].To.Should().Be(5);
+            mergedDiff.Ranges[2].ConflictedWith.AddedLines.Single().Entry.Should().Be("inserted line 5");
         }
 
         [Test]
@@ -301,6 +330,35 @@ namespace Merge.Test
             var patched = diff.PatchOriginal();
 
             patched.Should().BeEquivalentTo(target);
+        }
+
+        [Test]
+        public void Patch_should_wrap_conflicted_Parts()
+        {
+            var original = StringGenerator.Range(from: 1, count: 10, prefix: "line ").ToArray();
+            var target1 = original.ToList();
+            var target2 = original.ToList();
+
+            target1[3] = "replaced line 3";
+            target1[4] = "replaced line 4";
+            target1.Insert(5, "inserted line 5");
+
+            target2[5] = "conflicted";
+            target2[7] = "replaced line 7";
+            target2.RemoveRange(8, 1);
+
+            var diff1 = new Diff(original, target1.ToArray());
+            var diff2 = new Diff(original, target2.ToArray());
+
+            var mergedDiff = Diff.Merge(diff1, diff2);
+
+            var patched = mergedDiff.PatchOriginal();
+
+            patched[5].Should().Be("<<<");
+            patched[6].Should().Be("inserted line 5");
+            patched[7].Should().Be("---");
+            patched[8].Should().Be("conflicted");
+            patched[9].Should().Be(">>>");
         }
     }
 }

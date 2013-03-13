@@ -15,13 +15,13 @@ namespace Merge
             var mergedDiff = new Diff
                 {
                     _original = diff1._original,
-                    _ranges   = MergeRanges(diff1, diff2).ToArray()
+                    _ranges = MergeRanges(diff1, diff2)
                 };
 
             return mergedDiff;
         }
 
-        private static IEnumerable<DifferenceRange> MergeRanges(Diff diff1, Diff diff2)
+        private static DifferenceRange[] MergeRanges(Diff diff1, Diff diff2)
         {
             var mergedRanges = diff1._ranges
                                     .Select(x => new
@@ -37,20 +37,35 @@ namespace Merge
                                     .OrderBy(x => x.Range.From)
                                     .ToList();
 
+            var result = new List<DifferenceRange>(mergedRanges.Count);
             for (int i = 0; i < mergedRanges.Count; i++)
             {
                 var range = mergedRanges[i];
-                DifferenceRange conflictedRange = null;
                 if (i > 0)
                 {
                     var prevRange = mergedRanges[i - 1];
                     if (range.Range.IsCrossed(prevRange.Range) && !ReferenceEquals(prevRange.Source, range.Source))
                     {
-                        conflictedRange = prevRange.Range;
+                        var lastMergedRange = result.Last();
+                        var conflictedRange = lastMergedRange.CutRangeFrom(range.Range.From);
+                        if (lastMergedRange.Length == 0)
+                        {
+                            result.Remove(lastMergedRange);
+                        }
+
+                        var currentRange = new DifferenceRange(range.Range);
+                        var conflictedPart = currentRange.CutRangeTo(prevRange.Range.To, conflictedRange);
+                        result.Add(conflictedPart);
+                        if (currentRange.Length > 0)
+                        {
+                            result.Add(currentRange);
+                        }
+                        continue;
                     }
                 }
-                yield return new DifferenceRange(range.Range, conflictedRange);
+                result.Add(new DifferenceRange(range.Range));
             }
+            return result.ToArray();
         }
 
         private string[] _original;
