@@ -60,6 +60,7 @@ namespace Merge
                         {
                             result.Add(currentRange);
                         }
+
                         continue;
                     }
                 }
@@ -126,11 +127,11 @@ namespace Merge
             {
                 switch (range.DifferenceType)
                 {
-                    case DifferenceType.Deleted:
+                    case DifferenceType.Delete:
                         result.RemoveRange(range.From + offset, range.Length);
                         offset -= range.Length;
                         break;
-                    case DifferenceType.Added:
+                    case DifferenceType.Add:
                         result.InsertRange(range.From + offset, range.AddedLines.Select(x => x.Entry));
                         offset += range.Length;
                         break;
@@ -154,12 +155,12 @@ namespace Merge
                 var range = _ranges[i];
                 switch (range.DifferenceType)
                 {
-                    case DifferenceType.Deleted:
+                    case DifferenceType.Delete:
                         var deletedLines = originalLines.Skip(range.From).Take(range.Length).Select(Difference.Delete);
                         result.AddRange(deletedLines);
                         nextEqualFrom = range.To + 1;
                         break;
-                    case DifferenceType.Added:
+                    case DifferenceType.Add:
                         result.AddRange(range.AddedLines.Select(Difference.Added));
                         break;
                 }

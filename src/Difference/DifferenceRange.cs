@@ -4,25 +4,23 @@ using System.Linq;
 
 namespace Merge
 {
-    
-
     public class DifferenceRange : IEquatable<DifferenceRange>
     {
         public static DifferenceRange NewLinesRange(IList<Line> lines)
         {
             var from = lines.First().Index;
             var to = lines.Last().Index;
-            var range = new DifferenceRange(DifferenceType.Added, @from, to);
+            var range = new DifferenceRange(DifferenceType.Add, @from, to);
             range._addedLines.AddRange(lines);
             return range;
         }
 
         public static DifferenceRange DeletedLinesRange(int from, int to)
         {
-            return new DifferenceRange(DifferenceType.Deleted, @from, to);
+            return new DifferenceRange(DifferenceType.Delete, @from, to);
         }
 
-        private readonly DifferenceType _differenceType;
+        private DifferenceType _differenceType;
         private int _from;
         private int _to;
         private readonly DifferenceRange _conflictedWith;
@@ -110,7 +108,7 @@ namespace Merge
                 throw new ArgumentException("Index not contain in range bounds", "from");
 
             var differenceRange = new DifferenceRange(DifferenceType, @from, To, conflictedRange);
-            if (DifferenceType == DifferenceType.Added)
+            if (DifferenceType == DifferenceType.Add)
             {
                 var addedLines = AddedLines.Skip(@from - From).ToArray();
                 differenceRange._addedLines.AddRange(addedLines);
@@ -126,7 +124,7 @@ namespace Merge
                 throw new ArgumentException("Index not contain in range bounds", "to");
 
             var cutRange = new DifferenceRange(DifferenceType, From, to, conflictedRange);
-            if (DifferenceType == DifferenceType.Added)
+            if (DifferenceType == DifferenceType.Add)
             {
                 var addedLines = AddedLines.Take(to + 1).ToArray();
                 cutRange._addedLines.AddRange(addedLines);
@@ -136,9 +134,14 @@ namespace Merge
             return cutRange;
         }
 
+        public void MarkReplace()
+        {
+            _differenceType = DifferenceType.Replace;
+        }
+
         private void ProcessLine(Line line)
         {
-            if (DifferenceType == DifferenceType.Added)
+            if (DifferenceType == DifferenceType.Add)
             {
                 _addedLines.Add(line);
             }

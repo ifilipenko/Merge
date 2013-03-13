@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace Merge
 {
@@ -21,11 +22,51 @@ namespace Merge
             _lastDiffType = null;
 
             var lcs = new LargestCommonSubsequence<Line>(_originalLines, _targetLines, new IgnoreWhiteSpacesStringsEqualityComparer());
-            lcs.Backtrack(processAdded: line => ProcessDiff(line, DifferenceType.Added),
-                          processDeleted: line => ProcessDiff(line, DifferenceType.Deleted),
+            lcs.Backtrack(processAdded: line => ProcessDiff(line, DifferenceType.Add),
+                          processDeleted: line => ProcessDiff(line, DifferenceType.Delete),
                           processEquals: (line1, line2) => _lastDiffType = null);
 
-            return _ranges;
+            return GetReplacedDifferenceRanges().ToArray();
+        }
+
+        private IEnumerable<DifferenceRange> GetReplacedDifferenceRanges()
+        {
+            int i = 1;
+            var prevRange = _ranges[0];
+            while (i < _ranges.Count)
+            {
+                if (prevRange == null)
+                {
+                    prevRange = _ranges[i - 1];
+                }
+                var currRange = _ranges[i];
+                if (prevRange.From == currRange.From && prevRange.Length <= currRange.Length &&
+                    prevRange.DifferenceType == DifferenceType.Delete &&
+                    currRange.DifferenceType == DifferenceType.Add)
+                {
+                    var partRange = currRange.CutRangeTo(prevRange.To);
+                    partRange.MarkReplace();
+                    yield return partRange;
+                    if (currRange.Length != 0)
+                    {
+                        prevRange = currRange;
+                        yield return currRange;
+                    }
+                    else
+                    {
+                        prevRange = null;
+                        i++;
+                    }
+                }
+                else
+                {
+                    if (i == 1)
+                        yield return prevRange;
+                    yield return currRange;
+                    prevRange = null;
+                }
+                i++;
+            }
         }
 
         private void ProcessDiff(Line line, DifferenceType differenceType)

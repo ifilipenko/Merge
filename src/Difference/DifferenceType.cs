@@ -2,7 +2,8 @@
 {
     public enum DifferenceType
     {
-        Deleted,
-        Added
+        Replace,
+        Delete,
+        Add
     }
 }

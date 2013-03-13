@@ -39,7 +39,7 @@ namespace Merge.Test
             difference.Ranges.Should().HaveCount(1);
             difference.Ranges[0].From.Should().Be(0);
             difference.Ranges[0].To.Should().Be(4);
-            difference.Ranges[0].DifferenceType.Should().Be(DifferenceType.Added);
+            difference.Ranges[0].DifferenceType.Should().Be(DifferenceType.Add);
         }
 
         [Test]
@@ -53,7 +53,7 @@ namespace Merge.Test
             difference.Ranges.Should().HaveCount(1);
             difference.Ranges[0].From.Should().Be(0);
             difference.Ranges[0].To.Should().Be(4);
-            difference.Ranges[0].DifferenceType.Should().Be(DifferenceType.Deleted);
+            difference.Ranges[0].DifferenceType.Should().Be(DifferenceType.Delete);
         }
 
         [Test]
@@ -82,12 +82,12 @@ namespace Merge.Test
             var firstDiff  = difference.Ranges[0];
             firstDiff.From.Should().Be(3);
             firstDiff.To.Should().Be(5);
-            firstDiff.DifferenceType.Should().Be(DifferenceType.Added);
+            firstDiff.DifferenceType.Should().Be(DifferenceType.Add);
 
             var secondDiff = difference.Ranges[1];
             secondDiff.From.Should().Be(9);
             secondDiff.To.Should().Be(10);
-            secondDiff.DifferenceType.Should().Be(DifferenceType.Added);
+            secondDiff.DifferenceType.Should().Be(DifferenceType.Add);
         }
 
         [Test]
@@ -120,12 +120,12 @@ namespace Merge.Test
             var firstDiff = difference.Ranges[0];
             firstDiff.From.Should().Be(3);
             firstDiff.To.Should().Be(4);
-            firstDiff.DifferenceType.Should().Be(DifferenceType.Deleted);
+            firstDiff.DifferenceType.Should().Be(DifferenceType.Delete);
 
             var secondDiff = difference.Ranges[1];
             secondDiff.From.Should().Be(6);
             secondDiff.To.Should().Be(8);
-            secondDiff.DifferenceType.Should().Be(DifferenceType.Deleted);
+            secondDiff.DifferenceType.Should().Be(DifferenceType.Delete);
         }
 
         [Test]
@@ -142,27 +142,17 @@ namespace Merge.Test
 
             var difference = new Diff(original, target.ToArray());
 
-            difference.Ranges.Should().HaveCount(4);
+            difference.Ranges.Should().HaveCount(2);
 
             var diff1 = difference.Ranges[0];
             diff1.From.Should().Be(3);
             diff1.To.Should().Be(4);
-            diff1.DifferenceType.Should().Be(DifferenceType.Deleted);
+            diff1.DifferenceType.Should().Be(DifferenceType.Replace);
 
             var diff2 = difference.Ranges[1];
-            diff2.From.Should().Be(3);
-            diff2.To.Should().Be(4);
-            diff2.DifferenceType.Should().Be(DifferenceType.Added);
-
-            var diff3 = difference.Ranges[2];
-            diff3.From.Should().Be(6);
-            diff3.To.Should().Be(7);
-            diff3.DifferenceType.Should().Be(DifferenceType.Deleted);
-
-            var diff4 = difference.Ranges[3];
-            diff4.From.Should().Be(6);
-            diff4.To.Should().Be(7);
-            diff4.DifferenceType.Should().Be(DifferenceType.Added);
+            diff2.From.Should().Be(6);
+            diff2.To.Should().Be(7);
+            diff2.DifferenceType.Should().Be(DifferenceType.Replace);
         }
 
         [Test]
@@ -309,7 +299,7 @@ namespace Merge.Test
             mergedDiff.Ranges.Should().HaveCount(6);
             mergedDiff.Ranges[1].Length.Should().Be(2);
             mergedDiff.Ranges[2].HasConflict.Should().BeTrue();
-            mergedDiff.Ranges[2].DifferenceType.Should().Be(DifferenceType.Deleted);
+            mergedDiff.Ranges[2].DifferenceType.Should().Be(DifferenceType.Delete);
             mergedDiff.Ranges[2].From.Should().Be(5);
             mergedDiff.Ranges[2].To.Should().Be(5);
             mergedDiff.Ranges[2].ConflictedWith.AddedLines.Single().Entry.Should().Be("inserted line 5");
