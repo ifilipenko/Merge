@@ -16,7 +16,7 @@
 
         public static Difference Added(Line line)
         {
-            return new Difference(null, TypeEnum.Added);
+            return new Difference(line, TypeEnum.Added);
         }
 
         public static Difference Equal(Line line)
