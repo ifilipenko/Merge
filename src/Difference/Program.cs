@@ -27,7 +27,9 @@ namespace Merge
                     Console.WriteLine("\t" + parameters.FilePath2);
 
                     var file2Lines = File.ReadAllLines(parameters.FilePath2);
-                    var mergedFileText = Merge.Execute(originalLines, file1Lines, file2Lines);
+                    var diff1 = new Diff(originalLines, file1Lines);
+                    var diff2 = new Diff(originalLines, file2Lines);
+                    var mergedFileText = Diff.Merge(diff1, diff2).PatchOriginal();
                     Console.Write(mergedFileText);
                 }
                 else
@@ -36,8 +38,8 @@ namespace Merge
                     Console.WriteLine("\t" + parameters.OriginalFilePath);
                     Console.WriteLine("\t" + parameters.FilePath1);
 
-                    var differences = Diff.GetLinesDifference(originalLines, file1Lines);
-                    Print(differences);
+                    var diff = new Diff(originalLines, file1Lines);
+                    Print(diff.GetDiffPerLine());
                 }
             }
             catch (Exception ex)

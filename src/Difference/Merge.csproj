@@ -47,15 +47,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DifferenceAlgorithm.cs" />
-    <Compile Include="DifferenceMap.cs" />
+    <Compile Include="Diff.cs" />
     <Compile Include="DifferenceRange.cs" />
+    <Compile Include="IgnoreWhiteSpacesStringsEqualityComparer.cs" />
     <Compile Include="LargestCommonSubsequence.cs" />
     <Compile Include="DefaultEqualityComparer.cs" />
-    <Compile Include="Diff.cs" />
     <Compile Include="DifferenceType.cs" />
     <Compile Include="Difference.cs" />
     <Compile Include="Line.cs" />
-    <Compile Include="Merge.cs" />
     <Compile Include="Parameters.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

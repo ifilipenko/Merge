@@ -17,14 +17,13 @@ namespace Merge
 
         public IEnumerable<DifferenceRange> FindDiffs()
         {
-            DifferenceType? lastDiffType = null;
             _ranges = new List<DifferenceRange>();
             _lastDiffType = null;
 
-            var lcs = new LargestCommonSubsequence<Line>(_originalLines, _targetLines);
+            var lcs = new LargestCommonSubsequence<Line>(_originalLines, _targetLines, new IgnoreWhiteSpacesStringsEqualityComparer());
             lcs.Backtrack(processAdded: line => ProcessDiff(line, DifferenceType.Added),
                           processDeleted: line => ProcessDiff(line, DifferenceType.Deleted),
-                          processEquals: (line1, line2) => _lastDiffType = DifferenceType.Equals);
+                          processEquals: (line1, line2) => _lastDiffType = null);
 
             return _ranges;
         }

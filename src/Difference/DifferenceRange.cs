@@ -4,6 +4,8 @@ using System.Linq;
 
 namespace Merge
 {
+    
+
     public class DifferenceRange : IEquatable<DifferenceRange>
     {
         public static DifferenceRange NewLinesRange(IList<Line> lines)

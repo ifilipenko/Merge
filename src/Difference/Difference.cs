@@ -2,84 +2,52 @@
 {
     public class Difference
     {
+        public enum TypeEnum
+        {
+            Equals,
+            Deleted,
+            Added
+        }
+
         public static Difference Delete(Line line)
         {
-            return new Difference(line, null, DifferenceType.Deleted);
+            return new Difference(line, TypeEnum.Deleted);
         }
 
         public static Difference Added(Line line)
         {
-            return new Difference(null, line, DifferenceType.Added);
+            return new Difference(null, TypeEnum.Added);
         }
 
-        public static Difference Equal(Line text1, Line text2)
+        public static Difference Equal(Line line)
         {
-            return new Difference(text1, text2, DifferenceType.Equals);
+            return new Difference(line, TypeEnum.Equals);
         }
 
-        private Difference(Line line1, Line line2, DifferenceType type)
+        private Difference(Line line, TypeEnum type)
         {
-            Line1 = line1;
-            Line2 = line2;
+            Line = line;
             Type = type;
         }
 
-        public Line Line1 { get; set; }
-        public Line Line2 { get; set; }
-        public DifferenceType Type { get; set; }
-
-        public int ChangedLineIndex
-        {
-            get
-            {
-                return Line1 != null
-                           ? Line1.Index
-                           : Line2 != null
-                                 ? Line2.Index
-                                 : -1;
-            }
-        }
-
-        public string LineEntry
-        {
-            get
-            {
-                var line = Line1 ?? Line2;
-                return line == null ? null : line.Entry;
-            }
-        }
+        public Line Line { get; set; }
+        public TypeEnum Type { get; set; }
 
         public override string ToString()
         {
-            var prefix = string.Empty;
-            if (Line1 != null)
-            {
-                prefix += Line1.Index;
-            }
-            if (Line2 != null)
-            {
-                if (Line1 != null)
-                {
-                    prefix += "->" +  Line2.Index;
-                }
-                else
-                {
-                    prefix += Line2.Index;
-                }
-            }
-            return string.IsNullOrEmpty(prefix) ? DifferenceString() : prefix + "\t\t" + DifferenceString();
+            return Line.Index + ".\t\t" + DifferenceString();
         }
 
         private string DifferenceString()
         {
             switch (Type)
             {
-                case DifferenceType.Equals:
-                    return Line1.ToString();
-                case DifferenceType.Deleted:
-                    return "-" + Line1;
-                case DifferenceType.Added:
-                    return "+" + Line2;
+                case TypeEnum.Equals:
+                    return Line.ToString();
+                case TypeEnum.Deleted:
+                    return "-" + Line;
+                case TypeEnum.Added:
+                    return "+" + Line;
                 default:
                     return string.Empty;
             }
