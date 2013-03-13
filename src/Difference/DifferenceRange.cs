@@ -23,7 +23,7 @@ namespace Merge
         }
 
         private readonly DifferenceType _differenceType;
-        private readonly int _from;
+        private int _from;
         private int _to;
         private readonly DifferenceRange _conflictedWith;
         private readonly List<Line> _addedLines;
@@ -69,7 +69,11 @@ namespace Merge
 
         public int Length
         {
-            get { return _to - _from + 1; }
+            get
+            {
+                var length = _to - _from + 1;
+                return length < 0 ? 0 : length;
+            }
         }
 
         public IEnumerable<Line> AddedLines
@@ -98,6 +102,38 @@ namespace Merge
             return (From == other.From && other.To == To) ||
                    (From <= other.From && other.From <= To) ||
                    (To >= other.From && To <= other.To);
+        }
+
+        public DifferenceRange CutRangeFrom(int @from, DifferenceRange conflictedRange = null)
+        {
+            if (@from < From || @from > To)
+                throw new ArgumentException("Index not contain in range bounds", "from");
+
+            var differenceRange = new DifferenceRange(DifferenceType, @from, To, conflictedRange);
+            if (DifferenceType == DifferenceType.Added)
+            {
+                var addedLines = AddedLines.Skip(@from - From).ToArray();
+                differenceRange._addedLines.AddRange(addedLines);
+            }
+
+            _to = _to - differenceRange.Length;
+            return differenceRange;
+        }
+
+        public DifferenceRange CutRangeTo(int to, DifferenceRange conflictedRange = null)
+        {
+            if (to < From || to > To)
+                throw new ArgumentException("Index not contain in range bounds", "to");
+
+            var cutRange = new DifferenceRange(DifferenceType, From, to, conflictedRange);
+            if (DifferenceType == DifferenceType.Added)
+            {
+                var addedLines = AddedLines.Take(to + 1).ToArray();
+                cutRange._addedLines.AddRange(addedLines);
+            }
+
+            _from = to + 1;
+            return cutRange;
         }
 
         private void ProcessLine(Line line)
