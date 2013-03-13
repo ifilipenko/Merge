@@ -30,7 +30,7 @@ namespace Merge
                     var diff1 = new Diff(originalLines, file1Lines);
                     var diff2 = new Diff(originalLines, file2Lines);
                     var mergedFileText = Diff.Merge(diff1, diff2).PatchOriginal();
-                    Console.Write(mergedFileText);
+                    Console.Write(string.Join(Environment.NewLine, mergedFileText));
                 }
                 else
                 {
