@@ -46,6 +46,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DifferenceAlgorithm.cs" />
+    <Compile Include="DifferenceMap.cs" />
+    <Compile Include="DifferenceRange.cs" />
     <Compile Include="LargestCommonSubsequence.cs" />
     <Compile Include="DefaultEqualityComparer.cs" />
     <Compile Include="Diff.cs" />

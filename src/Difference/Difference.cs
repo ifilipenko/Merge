@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Merge
+﻿namespace Merge
 {
     public class Difference
     {
