@@ -41,7 +41,7 @@
 
         public override string ToString()
         {
-            return Line.Index + ".\t\t" + DifferenceString();
+            return Line.Index.ToString("d4") + "." + DifferenceString();
         }
 
         private string DifferenceString()
