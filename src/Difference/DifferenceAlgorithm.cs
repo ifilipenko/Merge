@@ -26,46 +26,56 @@ namespace Merge
                           processDeleted: line => ProcessDiff(line, DifferenceType.Delete),
                           processEquals: (line1, line2) => _lastDiffType = null);
 
-            return GetReplacedDifferenceRanges().ToArray();
+            return GetCompressReplacedDifferenceRanges(_ranges).ToArray();
         }
 
-        private IEnumerable<DifferenceRange> GetReplacedDifferenceRanges()
+        private static IEnumerable<DifferenceRange> GetCompressReplacedDifferenceRanges(IList<DifferenceRange> ranges)
         {
             int i = 1;
-            var prevRange = _ranges[0];
-            while (i < _ranges.Count)
+            var prevRange = ranges.Any() ? ranges[0] : null;
+            if (prevRange != null)
             {
-                if (prevRange == null)
+                if (ranges.Count == 1)
                 {
-                    prevRange = _ranges[i - 1];
-                }
-                var currRange = _ranges[i];
-                if (prevRange.From == currRange.From && prevRange.Length <= currRange.Length &&
-                    prevRange.DifferenceType == DifferenceType.Delete &&
-                    currRange.DifferenceType == DifferenceType.Add)
-                {
-                    var partRange = currRange.CutRangeTo(prevRange.To);
-                    partRange.MarkReplace();
-                    yield return partRange;
-                    if (currRange.Length != 0)
-                    {
-                        prevRange = currRange;
-                        yield return currRange;
-                    }
-                    else
-                    {
-                        prevRange = null;
-                        i++;
-                    }
+                    yield return prevRange;
                 }
                 else
                 {
-                    if (i == 1)
-                        yield return prevRange;
-                    yield return currRange;
-                    prevRange = null;
+                    while (i < ranges.Count)
+                    {
+                        if (prevRange == null)
+                        {
+                            prevRange = ranges[i - 1];
+                        }
+                        var currRange = ranges[i];
+                        if (prevRange.From == currRange.From && prevRange.Length <= currRange.Length &&
+                            prevRange.DifferenceType == DifferenceType.Delete &&
+                            currRange.DifferenceType == DifferenceType.Add)
+                        {
+                            var partRange = currRange.CutRangeTo(prevRange.To);
+                            partRange.MarkReplace();
+                            yield return partRange;
+                            if (currRange.Length != 0)
+                            {
+                                prevRange = currRange;
+                                yield return currRange;
+                            }
+                            else
+                            {
+                                prevRange = null;
+                                i++;
+                            }
+                        }
+                        else
+                        {
+                            if (i == 1)
+                                yield return prevRange;
+                            yield return currRange;
+                            prevRange = null;
+                        }
+                        i++;
+                    }
                 }
-                i++;
             }
         }
 

@@ -15,58 +15,55 @@ namespace Merge
             var mergedDiff = new Diff
                 {
                     _original = diff1._original,
-                    _ranges = MergeRanges(diff1, diff2)
+                    _ranges = MergeRanges(diff1, diff2).ToArray()
                 };
 
             return mergedDiff;
         }
 
-        private static DifferenceRange[] MergeRanges(Diff diff1, Diff diff2)
+        private static IEnumerable<DifferenceRange> MergeRanges(Diff diff1, Diff diff2)
         {
             var mergedRanges = diff1._ranges
-                                    .Select(x => new
-                                        {
-                                            Source = diff1._ranges,
-                                            Range = x
-                                        })
-                                    .Concat(diff2._ranges.Select(x => new
-                                        {
-                                            Source = diff2._ranges,
-                                            Range = x
-                                        }))
+                                    .Select(x => new {Source = diff1._ranges, Range = x})
+                                    .Concat(diff2._ranges.Select(x => new {Source = diff2._ranges, Range = x}))
                                     .OrderBy(x => x.Range.From)
                                     .ToList();
 
-            var result = new List<DifferenceRange>(mergedRanges.Count);
-            for (int i = 0; i < mergedRanges.Count; i++)
+            if (mergedRanges.Count == 1)
+                yield return mergedRanges.First().Range;
+
+            int lastReturnedRange = mergedRanges.Count;
+            int i = 1;
+            while (i < mergedRanges.Count)
             {
-                var range = mergedRanges[i];
-                if (i > 0)
+                var range     = mergedRanges[i];
+                var prevRange = mergedRanges[i - 1];
+                if (range.Range.IsCrossed(prevRange.Range) && !ReferenceEquals(prevRange.Source, range.Source))
                 {
-                    var prevRange = mergedRanges[i - 1];
-                    if (range.Range.IsCrossed(prevRange.Range) && !ReferenceEquals(prevRange.Source, range.Source))
-                    {
-                        var lastMergedRange = result.Last();
-                        var conflictedRange = lastMergedRange.CutRangeFrom(range.Range.From);
-                        if (lastMergedRange.Length == 0)
-                        {
-                            result.Remove(lastMergedRange);
-                        }
+                    var splittingRange = prevRange.Range.CutRange(range.Range.From, range.Range.To);
+                    splittingRange.CuttedRange.MakeConflictedWith(range.Range.Clone());
+                    if (splittingRange.Before != null)
+                        yield return splittingRange.Before;
+                    yield return splittingRange.CuttedRange;
+                    if (splittingRange.After != null)
+                        yield return splittingRange.After;
 
-                        var currentRange = new DifferenceRange(range.Range);
-                        var conflictedPart = currentRange.CutRangeTo(prevRange.Range.To, conflictedRange);
-                        result.Add(conflictedPart);
-                        if (currentRange.Length > 0)
-                        {
-                            result.Add(currentRange);
-                        }
-
-                        continue;
-                    }
+                    lastReturnedRange = i;
+                    i += 2;
                 }
-                result.Add(new DifferenceRange(range.Range));
+                else
+                {
+                    yield return prevRange.Range.Clone();
+                    lastReturnedRange = i - 1;
+                    i++;
+                }
             }
-            return result.ToArray();
+
+            var trailRangeIndex = lastReturnedRange + 1;
+            if (trailRangeIndex < mergedRanges.Count)
+            {
+                yield return mergedRanges[trailRangeIndex].Range.Clone();
+            }
         }
 
         private string[] _original;
@@ -125,19 +122,65 @@ namespace Merge
             var offset = 0;
             foreach (var range in _ranges)
             {
-                switch (range.DifferenceType)
+                if (range.HasConflict)
                 {
-                    case DifferenceType.Delete:
-                        result.RemoveRange(range.From + offset, range.Length);
-                        offset -= range.Length;
-                        break;
-                    case DifferenceType.Add:
-                        result.InsertRange(range.From + offset, range.AddedLines.Select(x => x.Entry));
-                        offset += range.Length;
-                        break;
+                    var conflictedLines = GetConflictedLines(range);
+                    result.InsertRange(range.From + offset, conflictedLines);
+                    offset += conflictedLines.Count;
+                }
+                else
+                {
+                    switch (range.DifferenceType)
+                    {
+                        case DifferenceType.Delete:
+                            result.RemoveRange(range.From + offset, range.Length);
+                            offset -= range.Length;
+                            break;
+                        case DifferenceType.Replace:
+                            result.RemoveRange(range.From + offset, range.Length);
+                            result.InsertRange(range.From + offset, range.AddedLines.Select(x => x.Entry));
+                            break;
+                        case DifferenceType.Add:
+                            result.InsertRange(range.From + offset, range.AddedLines.Select(x => x.Entry));
+                            offset += range.Length;
+                            break;
+                    }
                 }
             }
             return result.ToArray();
+        }
+
+        private IList<string> GetConflictedLines(DifferenceRange range)
+        {
+            var result = new List<string>();
+
+            result.Add("<<<");
+            result.AddRange(GetRangeChanges(range));
+            result.Add("---");
+            result.AddRange(GetRangeChanges(range.ConflictedWith));
+            result.Add(">>>");
+
+            return result;
+        }
+
+        private IEnumerable<string> GetRangeChanges(DifferenceRange range)
+        {
+            switch (range.DifferenceType)
+            {
+                case DifferenceType.Delete:
+                    for (int i = range.From; i < range.ConflictedWith.To; i++)
+                    {
+                        yield return "-" + _original[i];
+                    }
+                    break;
+                case DifferenceType.Replace:
+                case DifferenceType.Add:
+                    foreach (var addedLine in range.AddedLines)
+                    {
+                        yield return addedLine.Entry;
+                    }
+                    break;
+            }
         }
 
         public Difference[] GetDiffPerLine()
@@ -160,6 +203,10 @@ namespace Merge
                         result.AddRange(deletedLines);
                         nextEqualFrom = range.To + 1;
                         break;
+                    case DifferenceType.Replace:
+                        result.AddRange(range.AddedLines.Select(Difference.Replaced));
+                        nextEqualFrom = range.To + 1;
+                        break;
                     case DifferenceType.Add:
                         result.AddRange(range.AddedLines.Select(Difference.Added));
                         break;
@@ -178,9 +225,12 @@ namespace Merge
                     equalLength = _ranges[i + 1].From - nextEqualFrom;
                 }
 
-                var equalLines = originalLines.Skip(nextEqualFrom).Take(equalLength).Select(x => Difference.Equal(x));
+                var equalLines = originalLines.Skip(nextEqualFrom).Take(equalLength).Select(Difference.Equal);
                 result.AddRange(equalLines);
-                nextEqualFrom++;
+                if (equalLength > 0)
+                {
+                    nextEqualFrom++;
+                }
             }
             return result.ToArray();
         }

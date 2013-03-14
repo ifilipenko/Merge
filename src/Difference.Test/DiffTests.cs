@@ -156,6 +156,55 @@ namespace Merge.Test
         }
 
         [Test]
+        public void should_split_replaced_lines_from_simply_added_or_delete()
+        {
+            var original = StringGenerator.RandomStrings(count: 10, enableWhitespaces: true);
+            var target = original.ToList();
+
+            target[3] = StringGenerator.RandomString(enableWhitespaces: true);
+            target[4] = StringGenerator.RandomString(enableWhitespaces: true);
+            target.Insert(5, "new line");
+
+            var difference = new Diff(original, target.ToArray());
+
+            difference.Ranges.Should().HaveCount(2);
+
+            var diff1 = difference.Ranges[0];
+            diff1.From.Should().Be(3);
+            diff1.To.Should().Be(4);
+            diff1.DifferenceType.Should().Be(DifferenceType.Replace);
+
+            var diff2 = difference.Ranges[1];
+            diff2.From.Should().Be(5);
+            diff2.To.Should().Be(5);
+            diff2.DifferenceType.Should().Be(DifferenceType.Add);
+        }
+
+        [Test]
+        public void should_not_extract_replaced_when_previous_deleted_more_lines_than_next_add()
+        {
+            var original = StringGenerator.RandomStrings(count: 10, enableWhitespaces: true);
+            var target = original.ToList();
+
+            target[7] = StringGenerator.RandomString(enableWhitespaces: true);
+            target.RemoveRange(6, 1);
+
+            var difference = new Diff(original, target.ToArray());
+
+            difference.Ranges.Should().HaveCount(2);
+
+            var diff1 = difference.Ranges[0];
+            diff1.From.Should().Be(6);
+            diff1.To.Should().Be(7);
+            diff1.DifferenceType.Should().Be(DifferenceType.Delete);
+
+            var diff2 = difference.Ranges[1];
+            diff2.From.Should().Be(6);
+            diff2.To.Should().Be(6);
+            diff2.DifferenceType.Should().Be(DifferenceType.Add);
+        }
+
+        [Test]
         public void GetDiffPerLine_should_return_diffs_per_line_lines()
         {
             var original = StringGenerator.RandomStrings(count: 10, enableWhitespaces: true);
@@ -164,22 +213,21 @@ namespace Merge.Test
             target[3] = StringGenerator.RandomString(enableWhitespaces: true);
             target[4] = StringGenerator.RandomString(enableWhitespaces: true);
 
-            target[6] = StringGenerator.RandomString(enableWhitespaces: true);
             target[7] = StringGenerator.RandomString(enableWhitespaces: true);
+            target.RemoveRange(6, 1);
+            target.Insert(5, "new line");
 
             var difference = new Diff(original, target.ToArray());
             var linesDifference = difference.GetDiffPerLine();
 
-            linesDifference.Should().HaveCount(original.Length + 4);
-            linesDifference[3].Type.Should().Be(Difference.TypeEnum.Deleted);
-            linesDifference[4].Type.Should().Be(Difference.TypeEnum.Deleted);
+            linesDifference.Should().HaveCount(original.Length + 2);
+            linesDifference[3].Type.Should().Be(Difference.TypeEnum.Replaced);
+            linesDifference[4].Type.Should().Be(Difference.TypeEnum.Replaced);
             linesDifference[5].Type.Should().Be(Difference.TypeEnum.Added);
-            linesDifference[6].Type.Should().Be(Difference.TypeEnum.Added);
-
+            linesDifference[6].Type.Should().Be(Difference.TypeEnum.Equals);
+            linesDifference[7].Type.Should().Be(Difference.TypeEnum.Deleted);
             linesDifference[8].Type.Should().Be(Difference.TypeEnum.Deleted);
-            linesDifference[9].Type.Should().Be(Difference.TypeEnum.Deleted);
-            linesDifference[10].Type.Should().Be(Difference.TypeEnum.Added);
-            linesDifference[11].Type.Should().Be(Difference.TypeEnum.Added);
+            linesDifference[9].Type.Should().Be(Difference.TypeEnum.Added);
             linesDifference.Where(x => x.Type == Difference.TypeEnum.Equals).Should().HaveCount(6);
         }
 
@@ -229,12 +277,12 @@ namespace Merge.Test
         {
             var original = StringGenerator.Range(from: 1, count: 10, prefix: "line ");
             var target1 = original.ToList();
-            var target2 = original.ToList();
 
             target1[3] = "replaced line 3";
             target1[4] = "replaced line 4";
             target1.Insert(5, "inserted line 5");
 
+            var target2 = original.ToList();
             target2[6] = "replaced line 6";
             target2[7] = "replaced line 7";
             target2.RemoveRange(8, 1);
@@ -257,12 +305,12 @@ namespace Merge.Test
         {
             var original = StringGenerator.Range(from: 1, count: 10, prefix: "line ").ToArray();
             var target1 = original.ToList();
-            var target2 = original.ToList();
-
+            
             target1[3] = "replaced line 3";
             target1[4] = "replaced line 4";
             target1.Insert(5, "inserted line 5");
 
+            var target2 = original.ToList();
             target2[5] = "conflicted!!!";
             target2[7] = "replaced line 7";
             target2.RemoveRange(8, 1);
@@ -281,12 +329,12 @@ namespace Merge.Test
         {
             var original = StringGenerator.Range(from: 1, count: 10, prefix: "line ").ToArray();
             var target1 = original.ToList();
-            var target2 = original.ToList();
 
             target1[3] = "replaced line 3";
             target1[4] = "replaced line 4";
             target1.Insert(5, "inserted line 5");
 
+            var target2 = original.ToList();
             target2[5] = "conflicted!!!";
             target2[7] = "replaced line 7";
             target2.RemoveRange(8, 1);
@@ -296,13 +344,40 @@ namespace Merge.Test
 
             var mergedDiff = Diff.Merge(diff1, diff2);
 
-            mergedDiff.Ranges.Should().HaveCount(6);
-            mergedDiff.Ranges[1].Length.Should().Be(2);
-            mergedDiff.Ranges[2].HasConflict.Should().BeTrue();
-            mergedDiff.Ranges[2].DifferenceType.Should().Be(DifferenceType.Delete);
-            mergedDiff.Ranges[2].From.Should().Be(5);
-            mergedDiff.Ranges[2].To.Should().Be(5);
-            mergedDiff.Ranges[2].ConflictedWith.AddedLines.Single().Entry.Should().Be("inserted line 5");
+            mergedDiff.Ranges.Should().HaveCount(3);
+            mergedDiff.Ranges[1].HasConflict.Should().BeTrue();
+            mergedDiff.Ranges[1].DifferenceType.Should().Be(DifferenceType.Add);
+            mergedDiff.Ranges[1].From.Should().Be(5);
+            mergedDiff.Ranges[1].To.Should().Be(5);
+            mergedDiff.Ranges[1].ConflictedWith.AddedLines.Single().Entry.Should().Be("conflicted!!!");
+        }
+
+        [Test]
+        public void Merge_should_extract_conflicted_part_when_diffs_is_replaced()
+        {
+            var original = StringGenerator.Range(from: 1, count: 10, prefix: "line ").ToArray();
+            var target1 = original.ToList();
+
+            target1[3] = "replaced line 3";
+            target1[4] = "replaced line 4";
+            target1[5] = "replaced line 4";
+
+            var target2 = original.ToList();
+            target2[4] = "conflicted!!!";
+
+            var diff1 = new Diff(original, target1.ToArray());
+            var diff2 = new Diff(original, target2.ToArray());
+
+            var mergedDiff = Diff.Merge(diff1, diff2);
+
+            mergedDiff.Ranges.Should().HaveCount(3);
+            mergedDiff.Ranges[0].Length.Should().Be(1);
+            mergedDiff.Ranges[0].AddedLines.Should().HaveCount(1);
+            mergedDiff.Ranges[1].Length.Should().Be(1);
+            mergedDiff.Ranges[1].AddedLines.Should().HaveCount(1);
+            mergedDiff.Ranges[1].HasConflict.Should().BeTrue();
+            mergedDiff.Ranges[2].Length.Should().Be(1);
+            mergedDiff.Ranges[2].AddedLines.Should().HaveCount(1);
         }
 
         [Test]

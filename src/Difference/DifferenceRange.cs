@@ -4,6 +4,28 @@ using System.Linq;
 
 namespace Merge
 {
+    public class SplittingRange
+    {
+        public DifferenceRange Before { get; set; }
+        public DifferenceRange CuttedRange { get; set; }
+        public DifferenceRange After { get; set; }
+
+        public int BeforeLength
+        {
+            get { return Before == null ? 0 : Before.Length; }
+        }
+
+        public int AfterLength
+        {
+            get { return After == null ? 0 : After.Length; }
+        }
+
+        public int CuttedLength
+        {
+            get { return CuttedRange == null ? 0 : CuttedRange.Length; }
+        }
+    }
+
     public class DifferenceRange : IEquatable<DifferenceRange>
     {
         public static DifferenceRange NewLinesRange(IList<Line> lines)
@@ -23,7 +45,7 @@ namespace Merge
         private DifferenceType _differenceType;
         private int _from;
         private int _to;
-        private readonly DifferenceRange _conflictedWith;
+        private DifferenceRange _conflictedWith;
         private readonly List<Line> _addedLines;
 
         public DifferenceRange(DifferenceRange original, DifferenceRange conflictedWith = null)
@@ -102,13 +124,52 @@ namespace Merge
                    (To >= other.From && To <= other.To);
         }
 
+        public SplittingRange CutRange(int @from, int to)
+        {
+            var splittingRange = new SplittingRange();
+            if (From < @from)
+            {
+                var before = new DifferenceRange(DifferenceType, From, @from - 1);
+                if (_addedLines.Any())
+                {
+                    var addedLines = _addedLines.Take(before.Length).ToArray();
+                    before._addedLines.AddRange(addedLines);
+                }
+                splittingRange.Before = before;
+            }
+
+            var cuttedTo = Math.Min(To, to);
+            var cuttedRange = new DifferenceRange(DifferenceType, @from, cuttedTo);
+            if (_addedLines.Any())
+            {
+                var addedLines = _addedLines.Skip(splittingRange.BeforeLength).Take(cuttedRange.Length).ToArray();
+                cuttedRange._addedLines.AddRange(addedLines);
+            }
+            splittingRange.CuttedRange = cuttedRange;
+
+            if (To > to)
+            {
+                var after = new DifferenceRange(DifferenceType, @from + 1, To);
+                if (_addedLines.Any())
+                {
+                    var addedLines = _addedLines.Skip(splittingRange.BeforeLength + splittingRange.CuttedLength)
+                                                .Take(after.Length)
+                                                .ToArray();
+                    after._addedLines.AddRange(addedLines);
+                }
+                splittingRange.After = after;
+            }
+
+            return splittingRange;
+        }
+
         public DifferenceRange CutRangeFrom(int @from, DifferenceRange conflictedRange = null)
         {
             if (@from < From || @from > To)
                 throw new ArgumentException("Index not contain in range bounds", "from");
 
             var differenceRange = new DifferenceRange(DifferenceType, @from, To, conflictedRange);
-            if (DifferenceType == DifferenceType.Add)
+            if (DifferenceType != DifferenceType.Delete)
             {
                 var addedLines = AddedLines.Skip(@from - From).ToArray();
                 differenceRange._addedLines.AddRange(addedLines);
@@ -124,10 +185,11 @@ namespace Merge
                 throw new ArgumentException("Index not contain in range bounds", "to");
 
             var cutRange = new DifferenceRange(DifferenceType, From, to, conflictedRange);
-            if (DifferenceType == DifferenceType.Add)
+            if (DifferenceType != DifferenceType.Delete)
             {
-                var addedLines = AddedLines.Take(to + 1).ToArray();
+                var addedLines = _addedLines.Take(cutRange.Length).ToArray();
                 cutRange._addedLines.AddRange(addedLines);
+                _addedLines.RemoveRange(0, cutRange.Length);
             }
 
             _from = to + 1;
@@ -139,9 +201,26 @@ namespace Merge
             _differenceType = DifferenceType.Replace;
         }
 
+        public DifferenceRange Clone()
+        {
+            return new DifferenceRange(this);
+        }
+
+        public void MakeConflictedWith(DifferenceRange range)
+        {
+            if (range == null)
+                throw new ArgumentNullException("range");
+            if (ReferenceEquals(range, this))
+                throw new ArgumentException("Range can not conflict with itself", "range");
+            if (HasConflict)
+                throw new InvalidOperationException("Range is already has conflict");
+
+            _conflictedWith = range;
+        }
+
         private void ProcessLine(Line line)
         {
-            if (DifferenceType == DifferenceType.Add)
+            if (DifferenceType != DifferenceType.Delete)
             {
                 _addedLines.Add(line);
             }
@@ -149,6 +228,7 @@ namespace Merge
 
         private void SetToIndex(int to)
         {
+            // todo: validate that is not less then From
             _to = to;
         }
 
@@ -186,6 +266,11 @@ namespace Merge
         public static bool operator !=(DifferenceRange left, DifferenceRange right)
         {
             return !Equals(left, right);
+        }
+
+        public override string ToString()
+        {
+            return string.Format("{0}: {1} - {2} ({3}), Has conflict: {4}", DifferenceType, From, To, Length, HasConflict);
         }
     }
 }

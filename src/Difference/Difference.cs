@@ -6,7 +6,8 @@
         {
             Equals,
             Deleted,
-            Added
+            Added,
+            Replaced
         }
 
         public static Difference Delete(Line line)
@@ -17,6 +18,11 @@
         public static Difference Added(Line line)
         {
             return new Difference(line, TypeEnum.Added);
+        }
+
+        public static Difference Replaced(Line line)
+        {
+            return new Difference(line, TypeEnum.Replaced);
         }
 
         public static Difference Equal(Line line)
@@ -43,11 +49,13 @@
             switch (Type)
             {
                 case TypeEnum.Equals:
-                    return Line.ToString();
+                    return "  |" + Line;
                 case TypeEnum.Deleted:
-                    return "-" + Line;
+                    return "- |" + Line;
                 case TypeEnum.Added:
-                    return "+" + Line;
+                    return "+ |" + Line;
+                case TypeEnum.Replaced:
+                    return "-+|" + Line;
                 default:
                     return string.Empty;
             }
