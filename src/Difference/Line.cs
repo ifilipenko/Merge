@@ -5,7 +5,7 @@
         public Line(int index, string entry)
         {
             Index = index;
-            Entry = entry;
+            Entry = entry ?? string.Empty;
         }
 
         public int Index { get; private set; }

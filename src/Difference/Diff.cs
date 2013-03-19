@@ -168,7 +168,7 @@ namespace Merge
             switch (range.DifferenceType)
             {
                 case DifferenceType.Delete:
-                    for (int i = range.From; i < range.ConflictedWith.To; i++)
+                    for (int i = range.From; i < range.To; i++)
                     {
                         yield return "-" + _original[i];
                     }
@@ -177,7 +177,7 @@ namespace Merge
                 case DifferenceType.Add:
                     foreach (var addedLine in range.AddedLines)
                     {
-                        yield return addedLine.Entry;
+                        yield return "+" + addedLine.Entry;
                     }
                     break;
             }
